@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 
 from scipy import optimize
 
-#We want to fit S(k) = A (rho-rho_c)^gamma + B |k|^alpha
+# We want to fit S(k) = A (rho-rho_c)^gamma + B |k|^alpha
 def Sfit(rhok, A, rho_c, gamma, B, alpha):
     rho,k = rhok
     return A*abs(rho-rho_c)**gamma + B*k**alpha
@@ -44,7 +44,7 @@ print(f'S(k) = {A:.2f}(rho-{rho_c:.4f})^{gamma:.2f} + {B:.2f}|k|^{alpha:.2f}')
 print(f'rho_c = {rho_c:.4f}, gamma = {gamma:.2f}, alpha = {alpha:.2f}, zeta = {(1-alpha/2):.2f}')
 
 
-files_array = np.arange(5,20)   #the graph looks nicer without the densities with very large xi
+files_array = [5, 6, 8, 10, 19] # The graph looks nicer without the densities with very large xi
 
 fig,ax = plt.subplots()
 for i in range(np.size(files_array)):
@@ -67,8 +67,6 @@ for i in range(np.size(files_array)):
     y = (float(splited[1]))
     k2 = 2*np.pi*y/L
     
-    
-    
     if 0 < k1**2 + k2**2 < 1**2:
         k.append((k1**2 + k2**2)**0.5)
         S.append(float(splited[2]))
@@ -76,12 +74,9 @@ for i in range(np.size(files_array)):
   chi = A*abs(rho-rho_c)**gamma
   xi = (B/A)**(1/alpha) * abs(rho-rho_c)**(-gamma/alpha)
   
-  if ((i == 0) or ((i % 4) == 0)):
-  	label = "\u03C1 = " + str(rho)
-  	ax.plot(xi*np.array(k),S/chi,'+',label=label)
-  else:
-  	ax.plot(xi*np.array(k),S/chi,'+')
-  
+  label = "\u03C1 = " + str(rho)
+  ax.plot(xi*np.array(k),S/chi,'+',label=label)
+
 xik = range(1300)
 Schi = 1+xik**alpha
 ax.plot(xik,Schi,'black')

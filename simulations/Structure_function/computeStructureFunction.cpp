@@ -28,19 +28,22 @@ void computeStructureFunction(const unsigned int L, const double rho, const unsi
 
 int main()
 {
-  unsigned int L = 100;
-  double rho_c = 0.35;
   string save_folder = "data/";
   filesystem::create_directory(save_folder);
+
+  unsigned int L = 100;
+  double rho_c = 0.35;
+  unsigned int N = 20;
+  unsigned int n_samples = 100;
     
   fftw_init_threads();
 
-  // #pragma omp parallel for shared(L,rho_c,save_folder)
-  for(unsigned int i = 0 ; i < 20 ; i++) {
+  #pragma omp parallel for shared(L,rho_c,save_folder)
+  for(unsigned int i = 0 ; i < N ; i++) {
     double rho = rho_c + i*0.0025;
     string filename = save_folder + "S" + to_string(i+1) + ".txt";
     
-    computeStructureFunction(L,rho,1000,filename);
+    computeStructureFunction(L,rho,n_samples,filename);
   }
   
   return 0;
