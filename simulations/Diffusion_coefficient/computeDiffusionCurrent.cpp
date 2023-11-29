@@ -23,7 +23,7 @@ double getParticleDensity(const unsigned int L, const double lambda, const doubl
  *----------------------------------------------------------------------------------------------------------------------*/
 
 
-void computeDiffusionCurrent(const unsigned int L, double lambda, double epsilon, const double t_max, const string filename, const unsigned int n_records);
+void computeDiffusionCurrent(const unsigned int L, double lambda, double epsilon, const double t_max, const string filename, const unsigned int n_points);
 /*----------------------------------------------------------------------------------------------------------------------*
  *                                                                                                                      *
  *  Compute the diffusion current.                                                                                      *
@@ -91,7 +91,7 @@ double getParticleDensity(const unsigned int L, const double lambda, const doubl
 }
 
 
-void computeDiffusionCurrent(const unsigned int L, double lambda, double epsilon, const double t_max, const string filename, const unsigned int n_records)
+void computeDiffusionCurrent(const unsigned int L, double lambda, double epsilon, const double t_max, const string filename, const unsigned int n_points)
 {
   SystemConfiguration system_config = {0, 1, RESERVOIR, OPENED};
   ParticleSystem* system = createSystem(L, L, system_config);
@@ -111,7 +111,7 @@ void computeDiffusionCurrent(const unsigned int L, double lambda, double epsilon
   int N = 0;
   file<<t<<" ; "<<N<<endl;
 
-  double dt = t_max/n_records;
+  double dt = t_max/n_points;
   double t_next_record = dt;
   
   do {
