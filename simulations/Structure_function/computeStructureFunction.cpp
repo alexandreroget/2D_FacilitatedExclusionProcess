@@ -22,7 +22,7 @@ void computeStructureFunction(const unsigned int L, const double rho, const unsi
  *      │  └─ t = t + dt                                                                                                *
  *      └─ Compute S^i_rho(k) = |FFT(eta(x) - rho)|²                                                                    *
  *  2 ─ Compute S_rho(k) = sum_{i = 0 to n_samples-1} S^i_rho(k) / n_samples                                            *
- *  3 ─ Write S_rho(k) values in the filename.txt file.                                                                 *
+ *  3 ─ Write S_rho(k) values in the [filename] file.                                                                   *
  *                                                                                                                      *
  *----------------------------------------------------------------------------------------------------------------------*/
 
@@ -32,16 +32,16 @@ int main()
   filesystem::create_directory(save_folder);
 
   unsigned int L = 100;
-  double rho_c = 0.35;
+  double rho_c = 0.336;
   unsigned int N = 20;
   unsigned int n_samples = 100;
     
-  fftw_init_threads();
+  // fftw_init_threads();
 
-  #pragma omp parallel for shared(L,rho_c,save_folder)
+  // #pragma omp parallel for shared(L,rho_c,save_folder)
   for(unsigned int i = 0 ; i < N ; i++) {
-    double rho = rho_c + i*0.0025;
-    string filename = save_folder + "S" + to_string(i+1) + ".txt";
+    double rho = rho_c + i*0.0005;
+    string filename = save_folder + "S" + to_string(i) + ".txt";
     
     computeStructureFunction(L,rho,n_samples,filename);
   }
@@ -62,40 +62,52 @@ void computeStructureFunction(const unsigned int L, const double rho, const unsi
   unsigned int L2 = L * L;
   double rho2 = rho * rho;
   
-  vector<double> S_k(L2,0);
+  vector<double> S_k(L2,0.);
   
   fftw_complex* eta = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*L2);
   fftw_complex* eta_hat = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*L2);
 
   fftw_plan plan = fftw_plan_dft_1d(L2,eta,eta_hat,FFTW_FORWARD,FFTW_ESTIMATE);
 
-  for(unsigned int m = 0 ; m < n_samples ; m++) {
+  bool simulation_completed = false;
+  do {
     ParticleSystem* system = createSystem(L,L,system_config);
     system->initSystem(rho);
-      
-    double t = 0.;
-    do {
-      double dt = system->singleStep();
-      t += dt;
-    }while(t < L2);
+  
+    S_k = vector<double>(L2,0.);
+  
+    unsigned int m = 0;
+    while((m < n_samples) && (system->getTotalNumberOfActiveEdges() > 0)) {
+      double t = 0.;
+      do {
+        double dt = system->singleStep();
+        t += dt;
+      }while((t < L2) && (system->getTotalNumberOfActiveEdges() > 0));
     
-    for(unsigned int x = 0 ; x < L ; x++) {
-      for(unsigned int y = 0 ; y < L ; y++) {
-        Site* site = system->getSite(x,y);
-        unsigned int i = L*x + y;
-        system->isAnOccupiedSite(site) ? eta[i][0] = (1. - rho) : eta[i][0] = -rho;
-        eta[i][1] = 0.;
+      if(system->getTotalNumberOfActiveEdges() > 0) {
+        for(unsigned int x = 0 ; x < L ; x++) {
+          for(unsigned int y = 0 ; y < L ; y++) {
+            Site* site = system->getSite(x,y);
+            unsigned int i = L*x + y;
+            system->isAnOccupiedSite(site) ? eta[i][0] = (1. - rho) : eta[i][0] = -rho;
+            eta[i][1] = 0.;
+          }
+        }
+    
+        fftw_execute_dft(plan,eta,eta_hat);
+    
+        for(unsigned int i = 0 ; i < L2 ; i++) {
+          S_k[i] += eta_hat[i][0]*eta_hat[i][0] + eta_hat[i][1]*eta_hat[i][1];
+        }
+      
+        m++;
       }
     }
     
-    fftw_execute_dft(plan,eta,eta_hat);
-    
-    for(unsigned int i = 0 ; i < L2 ; i++) {
-      S_k[i] += eta_hat[i][0]*eta_hat[i][0] + eta_hat[i][1]*eta_hat[i][1];
-    }
-    
     delete system;
-  }
+    
+    simulation_completed = (m == n_samples);
+  }while(simulation_completed == false);
   
   fftw_destroy_plan(plan);
   fftw_free(eta);
