@@ -75,9 +75,9 @@ void computeActiveSitesDensity(const unsigned int L, const double rho_c, const s
   string filename = save_folder + "system.txt";
   system->saveParticlesArray(filename);
   
-  vector<unsigned int> sum_occupied_sites(L,0.);
-  vector<unsigned int> sum_active_sites(L,0.);
-  vector<unsigned int> sum_activity(L,0.);
+  vector<unsigned long> sum_occupied_sites(L,0.);
+  vector<unsigned long> sum_active_sites(L,0.);
+  vector<unsigned long> sum_activity(L,0.);
   
   for(unsigned int i = 0 ; i < n_jumps ; i++) {
     system->singleStep();
